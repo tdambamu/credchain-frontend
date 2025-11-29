@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+dist-ssr/
+*.log
+
+# local env files
+.env
+.env.local
+.env.*.local
+
+# editor stuff
+.vscode/
+.idea/
+*.sw?
+.DS_Store
+
+# lockfiles (optional – keep if you want exact dependency versions tracked)
+# package-lock.json
+# pnpm-lock.yaml
+# yarn.lock

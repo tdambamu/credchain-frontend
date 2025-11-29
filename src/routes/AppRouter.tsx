@@ -1,0 +1,91 @@
+import { Routes, Route, Navigate } from 'react-router-dom'
+import LoginPage from '../pages/auth/LoginPage'
+import IssuerDashboard from '../pages/issuer/IssuerDashboard'
+import AdminDashboard from '../pages/admin/AdminDashboard'
+import LearnerDashboard from '../pages/learner/LearnerDashboard'
+import VerifyCredentialPage from '../pages/public/VerifyCredentialPage'
+import ProtectedRoute from './ProtectedRoute'
+import type { Role } from '../types/auth'
+import CredentialsListPage from '../pages/issuer/CredentialListPage'
+import IssueCredentialPage from '../pages/issuer/IssueCredentialPage'
+import { useAuth } from '../context/AuthContext'
+
+const AppRouter = () => {
+  const issuerRoles: Role[] = ['ISSUER']
+  const adminRoles: Role[] = ['ADMIN']
+  const learnerRoles: Role[] = ['LEARNER']
+  const { user, token } = useAuth()
+
+  const getHomeForUser = () => {
+    if (!token || !user) return '/login'
+    switch (user.appRole) {
+      case 'ADMIN':
+        return '/admin'
+      case 'ISSUER':
+        return '/issuer'
+      case 'LEARNER':
+        return '/learner'
+      default:
+        return '/verify'
+    }
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+
+      <Route
+        path="/issuer"
+        element={
+          <ProtectedRoute roles={issuerRoles}>
+            <IssuerDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/issuer/credentials"
+        element={
+          <ProtectedRoute roles={issuerRoles}>
+            <CredentialsListPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/issuer/issue"
+        element={
+          <ProtectedRoute roles={issuerRoles}>
+            <IssueCredentialPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute roles={adminRoles}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/learner"
+        element={
+          <ProtectedRoute roles={learnerRoles}>
+            <LearnerDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="/verify" element={<VerifyCredentialPage />} />
+      <Route path="/verify/:credentialId" element={<VerifyCredentialPage />} />
+
+      <Route path="/" element={<Navigate to={getHomeForUser()} replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
+export default AppRouter
