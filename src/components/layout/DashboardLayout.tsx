@@ -14,12 +14,19 @@ type DashboardLayoutProps = {
 }
 
 const getNavItemsForRole = (role: Role): NavItem[] => {
-  if (role === 'ADMIN') {
+  if (role === 'SYSTEM_ADMIN') {
     return [
       { label: 'Overview', to: '/admin' },
       { label: 'Institutions', to: '/admin/institutions' },
       { label: 'Users', to: '/admin/users' },
       { label: 'Metrics', to: '/admin/metrics' }
+    ]
+  }
+
+  if (role === 'INSTITUTION_ADMIN') {
+    return [
+      { label: 'Overview', to: '/admin' },
+      { label: 'Users', to: '/admin/users' }
     ]
   }
 
@@ -32,12 +39,23 @@ const getNavItemsForRole = (role: Role): NavItem[] => {
   }
 
   if (role === 'LEARNER') {
-    return [
-      { label: 'My credentials', to: '/learner' }
-    ]
+    return [{ label: 'My credentials', to: '/learner' }]
+  }
+
+  if (role === 'EMPLOYER') {
+    return [{ label: 'Verify credentials', to: '/verify' }]
   }
 
   return [{ label: 'Verify', to: '/verify' }]
+}
+
+const getRoleLabel = (role: Role): string => {
+  if (role === 'SYSTEM_ADMIN') return 'System admin'
+  if (role === 'INSTITUTION_ADMIN') return 'Institution admin'
+  if (role === 'ISSUER') return 'Issuer'
+  if (role === 'LEARNER') return 'Learner'
+  if (role === 'EMPLOYER') return 'Employer'
+  return 'Unknown'
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ title, children }) => {
@@ -47,7 +65,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ title, children }) =>
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 flex">
-      <aside className="hidden md:flex w-60 flex-col border-r border-slate-800 bg-slate-950/95">
+      {/* Sidebar – always visible now */}
+      <aside className="w-60 flex flex-col border-r border-slate-800 bg-slate-950/95">
         <div className="flex items-center gap-2 px-4 py-4 border-b border-slate-800/80">
           <div className="h-8 w-8 rounded-2xl bg-linear-to-tr from-indigo-500 to-cyan-400 flex items-center justify-center text-xs font-bold text-slate-950">
             CC
@@ -84,7 +103,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ title, children }) =>
           )}
           <div className="flex items-center justify-between pt-2">
             <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400">
-              {role.toLowerCase()}
+              {getRoleLabel(role)}
             </span>
             <button
               onClick={logout}
@@ -96,6 +115,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ title, children }) =>
         </div>
       </aside>
 
+      {/* Main content */}
       <div className="flex-1 flex flex-col">
         <header className="flex items-center justify-between border-b border-slate-800 bg-slate-950/80 px-4 py-3 backdrop-blur">
           <div>
