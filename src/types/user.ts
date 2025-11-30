@@ -1,10 +1,4 @@
-export type BackendRole =
-  | 'ROLE_SYSTEM_ADMIN'
-  | 'ROLE_INSTITUTION_ADMIN'
-  | 'ROLE_ISSUER'
-  | 'ROLE_LEARNER'
-  | 'ROLE_EMPLOYER'
-  | string
+import type { Role } from './auth'
 
 export type User = {
   id: number
@@ -12,7 +6,7 @@ export type User = {
   email: string
   institutionId?: number
   institutionName?: string
-  roles: BackendRole[]
+  roles: Role[]
   enabled: boolean
   createdAt?: string
   lastLoginAt?: string
@@ -23,6 +17,6 @@ export type UserCreatePayload = {
   email: string
   password: string
   institutionId: number
-  roles: BackendRole[]
+  roles: Role[]
   enabled?: boolean
 }

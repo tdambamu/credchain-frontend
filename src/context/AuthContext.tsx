@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import api from '../api/client'
 import type { Role, AuthUser } from '../types/auth'
-import { getStoredToken, setStoredToken, clearStoredToken } from '../utils/storage'
 
 type LoginResponseDto = {
-  id: number
+  id?: number
+  userId?: number
   username: string
   email: string
   institutionId?: number
@@ -22,6 +22,8 @@ type AuthContextValue = {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
+
+const TOKEN_KEY = 'credchain_token'
 
 const normalizeRoles = (backendRoles?: string[] | null): Role[] => {
   if (!backendRoles || backendRoles.length === 0) {
@@ -43,70 +45,41 @@ const normalizeRoles = (backendRoles?: string[] | null): Role[] => {
   return unique
 }
 
-const pickAppRole = (roles: Role[]): Role => {
-  if (!roles.length) return 'UNKNOWN'
-  if (roles.includes('SYSTEM_ADMIN')) return 'SYSTEM_ADMIN'
-  if (roles.includes('INSTITUTION_ADMIN')) return 'INSTITUTION_ADMIN'
-  if (roles.includes('ISSUER')) return 'ISSUER'
-  if (roles.includes('LEARNER')) return 'LEARNER'
-  if (roles.includes('EMPLOYER')) return 'EMPLOYER'
-  return roles[0]
-}
+const buildAuthUser = (
+  data: LoginResponseDto
+): { user: AuthUser; token: string } => {
+  const token = data.token
+  const id = data.id ?? (data as any).userId ?? null
+  const institutionId = data.institutionId ?? null
+  const roles = normalizeRoles(data.roles)
+  const primaryRole: Role = roles[0] ?? 'UNKNOWN'
 
-const buildAuthUser = (dto: LoginResponseDto): { user: AuthUser; token: string } => {
-  const normalizedRoles = normalizeRoles(dto.roles)
-  const appRole = pickAppRole(normalizedRoles)
   const user: AuthUser = {
-    id: dto.id,
-    username: dto.username,
-    email: dto.email,
-    institutionId: dto.institutionId,
-    institutionName: dto.institutionName,
-    roles: normalizedRoles,
-    appRole
+    id,
+    username: data.username,
+    email: data.email,
+    institutionId,
+    institutionName: data.institutionName,
+    roles,
+    appRole: primaryRole
   }
-  return { user, token: dto.token }
+
+  return { user, token }
 }
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children
+}) => {
   const [user, setUser] = useState<AuthUser | null>(null)
-  const [token, setToken] = useState<string | null>(getStoredToken())
-  const [loading, setLoading] = useState(false)
+  const [token, setToken] = useState<string | null>(null)
+  const [loading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
-    const existingToken = getStoredToken()
-    if (!existingToken) {
-      setUser(null)
-      setToken(null)
-      return
+    const storedToken = localStorage.getItem(TOKEN_KEY)
+    if (storedToken) {
+      setToken(storedToken)
+      api.defaults.headers.common.Authorization = `Bearer ${storedToken}`
     }
-    setLoading(true)
-    api
-      .get<LoginResponseDto>('/auth/me')
-      .then(res => {
-        const dto = res.data
-        const normalizedRoles = normalizeRoles(dto.roles)
-        const appRole = pickAppRole(normalizedRoles)
-        const userFromMe: AuthUser = {
-          id: dto.id,
-          username: dto.username,
-          email: dto.email,
-          institutionId: dto.institutionId,
-          institutionName: dto.institutionName,
-          roles: normalizedRoles,
-          appRole
-        }
-        setUser(userFromMe)
-        setToken(existingToken)
-      })
-      .catch(() => {
-        clearStoredToken()
-        setUser(null)
-        setToken(null)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
   }, [])
 
   const login = async (usernameOrEmail: string, password: string) => {
@@ -117,7 +90,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password
       })
       const { user: builtUser, token: newToken } = buildAuthUser(data)
-      setStoredToken(newToken)
+      localStorage.setItem(TOKEN_KEY, newToken)
+      api.defaults.headers.common.Authorization = `Bearer ${newToken}`
       setUser(builtUser)
       setToken(newToken)
     } finally {
@@ -126,12 +100,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const logout = () => {
-    clearStoredToken()
+    localStorage.removeItem(TOKEN_KEY)
+    delete api.defaults.headers.common.Authorization
     setUser(null)
     setToken(null)
-    if (window.location.pathname !== '/login') {
-      window.location.href = '/login'
-    }
   }
 
   const value: AuthContextValue = {

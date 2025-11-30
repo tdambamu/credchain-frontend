@@ -7,10 +7,10 @@ export type Role =
   | 'UNKNOWN'
 
 export type AuthUser = {
-  id: number
+  id: number | null
   username: string
   email: string
-  institutionId?: number
+  institutionId: number | null
   institutionName?: string
   roles: Role[]
   appRole: Role
