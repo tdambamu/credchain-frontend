@@ -20,3 +20,12 @@ export type UserCreatePayload = {
   roles: Role[]
   enabled?: boolean
 }
+
+export type UserUpdatePayload = {
+  username: string
+  email: string
+  password?: string
+  institutionId?: number
+  roles: Role[]
+  enabled?: boolean
+}

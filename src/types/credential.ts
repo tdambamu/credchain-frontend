@@ -22,3 +22,17 @@ export type Credential = {
   issuerId: number
   issuerUsername: string
 }
+
+export type CredentialVerification = {
+  publicId: string
+  valid: boolean
+  status: CredentialStatus
+  message: string
+  credentialType?: string | null
+  title?: string | null
+  learnerFullName?: string | null
+  institutionName?: string | null
+  issuedAt?: string | null
+  expiresAt?: string | null
+  revokedAt?: string | null
+}

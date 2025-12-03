@@ -1,5 +1,5 @@
 import api from './client'
-import type { User, UserCreatePayload } from '../types/user'
+import type { User, UserCreatePayload, UserUpdatePayload } from '../types/user'
 import type { PageResponse } from '../types/pagination'
 import type { Role } from '../types/auth'
 
@@ -112,4 +112,30 @@ export const createUser = async (payload: UserCreatePayload): Promise<User> => {
 
   const { data } = await api.post<BackendUserDto>('/users', backendPayload)
   return mapUserDto(data)
+}
+
+export const updateUser = async (
+  id: number,
+  payload: UserUpdatePayload
+): Promise<User> => {
+  const backendPayload: any = {
+    username: payload.username,
+    email: payload.email,
+    roles: payload.roles.map(roleToBackend),
+    enabled: payload.enabled ?? true
+  }
+
+  if (typeof payload.institutionId === 'number') {
+    backendPayload.institutionId = payload.institutionId
+  }
+  if (payload.password && payload.password.trim().length > 0) {
+    backendPayload.password = payload.password
+  }
+
+  const { data } = await api.put<BackendUserDto>(`/users/${id}`, backendPayload)
+  return mapUserDto(data)
+}
+
+export const deleteUser = async (id: number): Promise<void> => {
+  await api.delete(`/users/${id}`)
 }
