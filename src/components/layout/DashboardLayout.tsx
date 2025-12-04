@@ -30,13 +30,15 @@ const getNavItemsForRole = (role: Role): NavItem[] => {
     ]
   }
 
-  if (role === 'ISSUER') {
-    return [
-      { label: 'Overview', to: '/issuer' },
-      { label: 'Credentials', to: '/issuer/credentials' },
-      { label: 'Issue credential', to: '/issuer/issue' }
-    ]
-  }
+if (role === 'ISSUER') {
+  return [
+    { label: 'Overview', to: '/issuer' },
+    { label: 'Learners', to: '/issuer/learners' },
+    { label: 'Credentials', to: '/issuer/credentials' },
+    { label: 'Issue credential', to: '/issuer/issue' }
+  ]
+}
+
 
   if (role === 'LEARNER') {
     return [{ label: 'My credentials', to: '/learner' }]

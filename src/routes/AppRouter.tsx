@@ -3,6 +3,7 @@ import LoginPage from '../pages/auth/LoginPage'
 import IssuerDashboard from '../pages/issuer/IssuerDashboard'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import LearnerDashboard from '../pages/learner/LearnerDashboard'
+import EmployerDashboard from '../pages/employer/EmployerDashboard'
 import VerifyCredentialPage from '../pages/public/VerifyCredentialPage'
 import ProtectedRoute from './ProtectedRoute'
 import type { Role } from '../types/auth'
@@ -10,6 +11,7 @@ import CredentialsListPage from '../pages/issuer/CredentialsListPage'
 import IssueCredentialPage from '../pages/issuer/IssueCredentialPage'
 import InstitutionsPage from '../pages/admin/InstitutionsPage'
 import UsersPage from '../pages/admin/UsersPage'
+import LearnersPage from '../pages/issuer/LearnersPage'
 import { useAuth } from '../context/AuthContext'
 
 const AppRouter = () => {
@@ -17,6 +19,7 @@ const AppRouter = () => {
   const adminRoles: Role[] = ['SYSTEM_ADMIN', 'INSTITUTION_ADMIN']
   const systemAdminRoles: Role[] = ['SYSTEM_ADMIN']
   const learnerRoles: Role[] = ['LEARNER']
+  const employerRoles: Role[] = ['EMPLOYER']
   const { user, token } = useAuth()
 
   const getHomeForUser = () => {
@@ -31,7 +34,7 @@ const AppRouter = () => {
       case 'LEARNER':
         return '/learner'
       case 'EMPLOYER':
-        return '/verify'
+        return '/employer'
       default:
         return '/verify'
     }
@@ -46,6 +49,15 @@ const AppRouter = () => {
         element={
           <ProtectedRoute roles={issuerRoles}>
             <IssuerDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/issuer/learners"
+        element={
+          <ProtectedRoute roles={issuerRoles}>
+            <LearnersPage />
           </ProtectedRoute>
         }
       />
@@ -100,6 +112,15 @@ const AppRouter = () => {
         element={
           <ProtectedRoute roles={learnerRoles}>
             <LearnerDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/employer"
+        element={
+          <ProtectedRoute roles={employerRoles}>
+            <EmployerDashboard />
           </ProtectedRoute>
         }
       />

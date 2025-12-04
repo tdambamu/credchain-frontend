@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import api from '../api/client'
+import { fetchProfile } from '../api/auth'
 import type { Role, AuthUser } from '../types/auth'
 
+// This type mirrors the backend LoginResponse DTO
 type LoginResponseDto = {
   id?: number
   userId?: number
@@ -72,14 +74,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [token, setToken] = useState<string | null>(null)
-  const [loading, setLoading] = useState<boolean>(false)
+  // Initialize loading to true so we don't render protected routes until session is checked
+  const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY)
-    if (storedToken) {
-      setToken(storedToken)
-      api.defaults.headers.common.Authorization = `Bearer ${storedToken}`
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem(TOKEN_KEY)
+      if (storedToken) {
+        // Optimistically set token header so the request works
+        setToken(storedToken)
+        api.defaults.headers.common.Authorization = `Bearer ${storedToken}`
+        try {
+          // Fetch the full profile to get the latest Institution ID and Roles
+          // We treat the response as LoginResponseDto (ignoring the token field which might be null in /me response)
+          const data = await fetchProfile()
+          // Pass the data (casted to any/dto to satisfy TS) to our builder
+          // The /me endpoint returns a similar structure to login but without the token usually,
+          // however buildAuthUser handles extracting the user part.
+          const { user: builtUser } = buildAuthUser({ ...data, token: storedToken } as LoginResponseDto)
+          setUser(builtUser)
+        } catch (error) {
+          console.error('Failed to restore session:', error)
+          // If profile fetch fails (e.g. 401), clear everything
+          localStorage.removeItem(TOKEN_KEY)
+          delete api.defaults.headers.common.Authorization
+          setToken(null)
+          setUser(null)
+        }
+      }
+      setLoading(false)
     }
+
+    initAuth()
   }, [])
 
   const login = async (usernameOrEmail: string, password: string) => {
